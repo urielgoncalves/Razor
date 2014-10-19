@@ -233,7 +233,7 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
                         }
                         else
                         {
-                            // TODO: Make complex types in non-bufferable attributes work in 
+                            // TODO: Make complex types in non-bufferable attributes work in
                             // https://github.com/aspnet/Razor/issues/129
                             if (!isPlainTextValue)
                             {
@@ -363,6 +363,7 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
         {
             RenderAttributeValue(
                 attributeDescriptor,
+                valueText: null,
                 valueRenderer: (writer) =>
                 {
                     RenderBufferedAttributeValueAccessor(writer);
@@ -373,6 +374,7 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
         {
             RenderAttributeValue(
                 attributeDescriptor,
+                valueText: value,
                 valueRenderer: (writer) =>
                 {
                     writer.Write(value);
@@ -383,6 +385,7 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
         {
             RenderAttributeValue(
                 attributeDescriptor,
+                valueText: "\"" + value + "\"",
                 valueRenderer: (writer) =>
                 {
                     writer.WriteStringLiteral(value);
@@ -428,10 +431,13 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
             }
         }
 
-        private void RenderAttributeValue(TagHelperAttributeDescriptor attributeDescriptor,
-                                          Action<CSharpCodeWriter> valueRenderer)
+        private void RenderAttributeValue(
+            TagHelperAttributeDescriptor attributeDescriptor,
+            string valueText,
+            Action<CSharpCodeWriter> valueRenderer)
         {
-            AttributeValueCodeRenderer.RenderAttributeValue(attributeDescriptor, _writer, _context, valueRenderer);
+            AttributeValueCodeRenderer
+                .RenderAttributeValue(attributeDescriptor, _writer, _context, valueText, valueRenderer);
         }
 
         private static void RenderBufferedAttributeValueAccessor(CSharpCodeWriter writer)
