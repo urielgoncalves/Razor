@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -27,7 +28,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                    uniqueId: string.Empty,
                    executeChildContentAsync: async () => await Task.FromResult(result: true),
                    startWritingScope: () => { },
-                   endWritingScope: () => new StringWriter())
+                   endWritingScope: () => new StringWriter(),
+                   parentExecutionContext: null)
         {
         }
 
@@ -39,16 +41,28 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <param name="executeChildContentAsync">A delegate used to execute the child content asynchronously.</param>
         /// <param name="startWritingScope">A delegate used to start a writing scope in a Razor page.</param>
         /// <param name="endWritingScope">A delegate used to end a writing scope in a Razor page.</param>
+        /// <param name="parentExecutionContext">The parent <see cref="TagHelperExecutionContext"/>.</param>
         public TagHelperExecutionContext([NotNull] string tagName,
                                          [NotNull] string uniqueId,
                                          [NotNull] Func<Task> executeChildContentAsync,
                                          [NotNull] Action startWritingScope,
-                                         [NotNull] Func<TextWriter> endWritingScope)
+                                         [NotNull] Func<TextWriter> endWritingScope,
+                                         TagHelperExecutionContext parentExecutionContext)
         {
             _tagHelpers = new List<ITagHelper>();
             _executeChildContentAsync = executeChildContentAsync;
             _startWritingScope = startWritingScope;
             _endWritingScope = endWritingScope;
+
+            // If we're not wrapped by another TagHelper then there will not be a parentExecutionContext.
+            if (parentExecutionContext != null)
+            {
+                Items = new ItemsCopyOnWriteDictionary(parentExecutionContext.Items);
+            }
+            else
+            {
+                Items = new Dictionary<string, object>(StringComparer.Ordinal);
+            }
 
             AllAttributes = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             HTMLAttributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -66,6 +80,11 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 return _childContent != null;
             }
         }
+
+        /// <summary>
+        /// Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s.
+        /// </summary>
+        public IDictionary<string, object> Items { get; }
 
         /// <summary>
         /// HTML attributes.
@@ -160,6 +179,137 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             }
 
             return _childContent;
+        }
+
+        private class ItemsCopyOnWriteDictionary : IDictionary<string, object>
+        {
+            private readonly IDictionary<string, object> _sourceDictionary;
+            private IDictionary<string, object> _innerDictionary;
+
+            public ItemsCopyOnWriteDictionary([NotNull] IDictionary<string, object> sourceDictionary)
+            {
+                _sourceDictionary = sourceDictionary;
+            }
+
+            private IDictionary<string, object> ReadDictionary
+            {
+                get
+                {
+                    return _innerDictionary ?? _sourceDictionary;
+                }
+            }
+
+            private IDictionary<string, object> WriteDictionary
+            {
+                get
+                {
+                    if (_innerDictionary == null)
+                    {
+                        _innerDictionary = new Dictionary<string, object>(_sourceDictionary, StringComparer.Ordinal);
+                    }
+
+                    return _innerDictionary;
+                }
+            }
+
+            public virtual ICollection<string> Keys
+            {
+                get
+                {
+                    return ReadDictionary.Keys;
+                }
+            }
+
+            public virtual ICollection<object> Values
+            {
+                get
+                {
+                    return ReadDictionary.Values;
+                }
+            }
+
+            public virtual int Count
+            {
+                get
+                {
+                    return ReadDictionary.Count;
+                }
+            }
+
+            public virtual bool IsReadOnly
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public virtual object this[[NotNull] string key]
+            {
+                get
+                {
+                    return ReadDictionary[key];
+                }
+                set
+                {
+                    WriteDictionary[key] = value;
+                }
+            }
+
+            public virtual bool ContainsKey([NotNull] string key)
+            {
+                return ReadDictionary.ContainsKey(key);
+            }
+
+            public virtual void Add([NotNull] string key, object value)
+            {
+                WriteDictionary.Add(key, value);
+            }
+
+            public virtual bool Remove([NotNull] string key)
+            {
+                return WriteDictionary.Remove(key);
+            }
+
+            public virtual bool TryGetValue([NotNull] string key, out object value)
+            {
+                return ReadDictionary.TryGetValue(key, out value);
+            }
+
+            public virtual void Add(KeyValuePair<string, object> item)
+            {
+                WriteDictionary.Add(item);
+            }
+
+            public virtual void Clear()
+            {
+                WriteDictionary.Clear();
+            }
+
+            public virtual bool Contains(KeyValuePair<string, object> item)
+            {
+                return ReadDictionary.Contains(item);
+            }
+
+            public virtual void CopyTo([NotNull] KeyValuePair<string, object>[] array, int arrayIndex)
+            {
+                ReadDictionary.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(KeyValuePair<string, object> item)
+            {
+                return WriteDictionary.Remove(item);
+            }
+
+            public virtual IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+            {
+                return ReadDictionary.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 }

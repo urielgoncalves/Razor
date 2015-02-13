@@ -18,15 +18,19 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// Instantiates a new <see cref="TagHelperContext"/>.
         /// </summary>
         /// <param name="allAttributes">Every attribute associated with the current HTML element.</param>
+        /// <param name="parentItems">Items that have been created by parent <see cref="ITagHelper"/>s.</param>
         /// <param name="uniqueId">The unique identifier for the source element this <see cref="TagHelperContext" /> 
         /// applies to.</param>
         /// <param name="getChildContentAsync">A delegate used to execute and retrieve the rendered child content 
         /// asynchronously.</param>
-        public TagHelperContext([NotNull] IDictionary<string, object> allAttributes,
-                                [NotNull] string uniqueId,
-                                [NotNull] Func<Task<string>> getChildContentAsync)
+        public TagHelperContext(
+            [NotNull] IDictionary<string, object> allAttributes,
+            [NotNull] IDictionary<string, object> parentItems,
+            [NotNull] string uniqueId,
+            [NotNull] Func<Task<string>> getChildContentAsync)
         {
             AllAttributes = allAttributes;
+            Items = parentItems;
             UniqueId = uniqueId;
             _getChildContentAsync = getChildContentAsync;
         }
@@ -35,6 +39,15 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// Every attribute associated with the current HTML element.
         /// </summary>
         public IDictionary<string, object> AllAttributes { get; }
+
+        /// <summary>
+        /// Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s.
+        /// </summary>
+        /// <remarks>
+        /// This <see cref="IDictionary{string, object}"/> is copy-on-write in order to not affect parent
+        /// <see cref="ITagHelper"/>s.
+        /// </remarks>
+        public IDictionary<string, object> Items { get; }
 
         /// <summary>
         /// An identifier unique to the HTML element this context is for.

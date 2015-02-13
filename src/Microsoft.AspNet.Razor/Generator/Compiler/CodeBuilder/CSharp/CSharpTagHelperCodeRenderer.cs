@@ -134,6 +134,8 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
                    .Write(_tagHelperContext.StartWritingScopeMethodName)
                    .WriteParameterSeparator()
                    .Write(_tagHelperContext.EndWritingScopeMethodName)
+                   .WriteParameterSeparator()
+                   .Write(ExecutionContextVariableName)
                    .WriteEndMethodInvocation();
         }
 

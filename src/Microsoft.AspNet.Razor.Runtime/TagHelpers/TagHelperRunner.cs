@@ -22,6 +22,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         {
             var tagHelperContext = new TagHelperContext(
                 executionContext.AllAttributes,
+                executionContext.Items,
                 executionContext.UniqueId,
                 executionContext.GetChildContentAsync);
             var tagHelperOutput = new TagHelperOutput(executionContext.TagName, executionContext.HTMLAttributes);
