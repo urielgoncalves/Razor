@@ -13,6 +13,146 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
     public class TagHelperExecutionContextTest
     {
         [Fact]
+        public void Items_DoesNotRequireParentExecutionContext()
+        {
+            // Arrange & Act
+            var executionContext = new TagHelperExecutionContext(
+                "p",
+                uniqueId: string.Empty,
+                executeChildContentAsync: () => Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: null);
+
+            // Act
+            executionContext.Items["test-entry"] = 1234;
+
+            // Assert
+            Assert.Collection(
+                executionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(1234, entry.Value);
+                });
+        }
+
+        [Fact]
+        public void Items_IsRetrievedFromParentExecutionContext()
+        {
+            // Arrange
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+
+            // Act
+            var executionContext = new TagHelperExecutionContext(
+                "p",
+                uniqueId: string.Empty,
+                executeChildContentAsync: () => Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: parentExecutionContext);
+
+            // Assert
+            Assert.Collection(
+                executionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(1234, entry.Value);
+                });
+        }
+
+        [Fact]
+        public void Items_ModificationDoesNotAffectParent()
+        {
+            // Arrange
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+            var executionContext = new TagHelperExecutionContext(
+                "p",
+                uniqueId: string.Empty,
+                executeChildContentAsync: () => Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items["test-entry"] = 2222;
+
+            // Assert
+            Assert.Collection(
+                executionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(2222, entry.Value);
+                });
+            Assert.Collection(
+                parentExecutionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(1234, entry.Value);
+                });
+        }
+
+        [Fact]
+        public void Items_InsertionDoesNotAffectParent()
+        {
+            // Arrange
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var executionContext = new TagHelperExecutionContext(
+                "p",
+                uniqueId: string.Empty,
+                executeChildContentAsync: () => Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items["new-entry"] = 2222;
+
+            // Assert
+            Assert.Collection(
+                executionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("new-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(2222, entry.Value);
+                });
+            Assert.Empty(parentExecutionContext.Items);
+        }
+
+        [Fact]
+        public void Items_RemovalDoesNotAffectParent()
+        {
+            // Arrange
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+            var executionContext = new TagHelperExecutionContext(
+                "p",
+                uniqueId: string.Empty,
+                executeChildContentAsync: () => Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items.Remove("test-entry");
+
+            // Assert
+            Assert.Empty(executionContext.Items);
+            Assert.Collection(
+                parentExecutionContext.Items,
+                (entry) =>
+                {
+                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
+                    Assert.Equal(1234, entry.Value);
+                });
+        }
+
+        [Fact]
         public async Task GetChildContentAsync_CachesValue()
         {
             // Arrange
@@ -33,7 +173,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     return Task.FromResult(result: true);
                 },
                 startWritingScope: () => { },
-                endWritingScope: () => writer);
+                endWritingScope: () => writer,
+                parentExecutionContext: null);
 
             // Act
             var content1 = await executionContext.GetChildContentAsync();
@@ -60,7 +201,8 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     return Task.FromResult(result: true);
                 },
                 startWritingScope: () => { },
-                endWritingScope: () => new StringWriter());
+                endWritingScope: () => new StringWriter(),
+                parentExecutionContext: null);
 
             // Act
             await executionContext.ExecuteChildContentAsync();
