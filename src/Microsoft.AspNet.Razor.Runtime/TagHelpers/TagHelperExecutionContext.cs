@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Framework.Internal;
 
 namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
 {
@@ -57,7 +58,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             // If we're not wrapped by another TagHelper then there will not be a parentExecutionContext.
             if (parentExecutionContext != null)
             {
-                Items = new ItemsCopyOnWriteDictionary(parentExecutionContext.Items);
+                Items = new CopyOnWriteDictionary<string, object>(
+                    parentExecutionContext.Items, 
+                    StringComparer.Ordinal);
             }
             else
             {
@@ -179,137 +182,6 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             }
 
             return _childContent;
-        }
-
-        private class ItemsCopyOnWriteDictionary : IDictionary<string, object>
-        {
-            private readonly IDictionary<string, object> _sourceDictionary;
-            private IDictionary<string, object> _innerDictionary;
-
-            public ItemsCopyOnWriteDictionary([NotNull] IDictionary<string, object> sourceDictionary)
-            {
-                _sourceDictionary = sourceDictionary;
-            }
-
-            private IDictionary<string, object> ReadDictionary
-            {
-                get
-                {
-                    return _innerDictionary ?? _sourceDictionary;
-                }
-            }
-
-            private IDictionary<string, object> WriteDictionary
-            {
-                get
-                {
-                    if (_innerDictionary == null)
-                    {
-                        _innerDictionary = new Dictionary<string, object>(_sourceDictionary, StringComparer.Ordinal);
-                    }
-
-                    return _innerDictionary;
-                }
-            }
-
-            public virtual ICollection<string> Keys
-            {
-                get
-                {
-                    return ReadDictionary.Keys;
-                }
-            }
-
-            public virtual ICollection<object> Values
-            {
-                get
-                {
-                    return ReadDictionary.Values;
-                }
-            }
-
-            public virtual int Count
-            {
-                get
-                {
-                    return ReadDictionary.Count;
-                }
-            }
-
-            public virtual bool IsReadOnly
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public virtual object this[[NotNull] string key]
-            {
-                get
-                {
-                    return ReadDictionary[key];
-                }
-                set
-                {
-                    WriteDictionary[key] = value;
-                }
-            }
-
-            public virtual bool ContainsKey([NotNull] string key)
-            {
-                return ReadDictionary.ContainsKey(key);
-            }
-
-            public virtual void Add([NotNull] string key, object value)
-            {
-                WriteDictionary.Add(key, value);
-            }
-
-            public virtual bool Remove([NotNull] string key)
-            {
-                return WriteDictionary.Remove(key);
-            }
-
-            public virtual bool TryGetValue([NotNull] string key, out object value)
-            {
-                return ReadDictionary.TryGetValue(key, out value);
-            }
-
-            public virtual void Add(KeyValuePair<string, object> item)
-            {
-                WriteDictionary.Add(item);
-            }
-
-            public virtual void Clear()
-            {
-                WriteDictionary.Clear();
-            }
-
-            public virtual bool Contains(KeyValuePair<string, object> item)
-            {
-                return ReadDictionary.Contains(item);
-            }
-
-            public virtual void CopyTo([NotNull] KeyValuePair<string, object>[] array, int arrayIndex)
-            {
-                ReadDictionary.CopyTo(array, arrayIndex);
-            }
-
-            public bool Remove(KeyValuePair<string, object> item)
-            {
-                return WriteDictionary.Remove(item);
-            }
-
-            public virtual IEnumerator<KeyValuePair<string, object>> GetEnumerator()
-            {
-                return ReadDictionary.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
         }
     }
 }
