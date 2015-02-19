@@ -28,13 +28,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             executionContext.Items["test-entry"] = 1234;
 
             // Assert
-            Assert.Collection(
-                executionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(1234, entry.Value);
-                });
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, executionContextItem.Value);
         }
 
         [Fact]
@@ -54,13 +50,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                 parentExecutionContext: parentExecutionContext);
 
             // Assert
-            Assert.Collection(
-                executionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(1234, entry.Value);
-                });
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, executionContextItem.Value);
         }
 
         [Fact]
@@ -81,20 +73,12 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             executionContext.Items["test-entry"] = 2222;
 
             // Assert
-            Assert.Collection(
-                executionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(2222, entry.Value);
-                });
-            Assert.Collection(
-                parentExecutionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(1234, entry.Value);
-                });
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(2222, executionContextItem.Value);
+            var parentExecutionContextItem = Assert.Single(parentExecutionContext.Items);
+            Assert.Equal("test-entry", parentExecutionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, parentExecutionContextItem.Value);
         }
 
         [Fact]
@@ -114,13 +98,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             executionContext.Items["new-entry"] = 2222;
 
             // Assert
-            Assert.Collection(
-                executionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("new-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(2222, entry.Value);
-                });
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("new-entry", executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(2222, executionContextItem.Value);
             Assert.Empty(parentExecutionContext.Items);
         }
 
@@ -143,13 +123,9 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
 
             // Assert
             Assert.Empty(executionContext.Items);
-            Assert.Collection(
-                parentExecutionContext.Items,
-                (entry) =>
-                {
-                    Assert.Equal("test-entry", entry.Key, StringComparer.Ordinal);
-                    Assert.Equal(1234, entry.Value);
-                });
+            var parentExecutionContextItem = Assert.Single(parentExecutionContext.Items);
+            Assert.Equal("test-entry", parentExecutionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, parentExecutionContextItem.Value);
         }
 
         [Fact]
