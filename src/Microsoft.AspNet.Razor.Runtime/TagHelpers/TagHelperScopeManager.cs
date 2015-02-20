@@ -41,12 +41,27 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                                                [NotNull] Func<TextWriter> endWritingScope,
                                                TagHelperExecutionContext parentExecutionContext)
         {
-            var executionContext = new TagHelperExecutionContext(tagName,
-                                                                 uniqueId,
-                                                                 executeChildContentAsync,
-                                                                 startWritingScope,
-                                                                 endWritingScope,
-                                                                 parentExecutionContext);
+            IDictionary<object, object> parentItems;
+
+            // If we're not wrapped by another TagHelper then there will not be a parentExecutionContext.
+            if (parentExecutionContext != null)
+            {
+                parentItems = new CopyOnWriteDictionary<object, object>(
+                    parentExecutionContext.Items,
+                    comparer: null);
+            }
+            else
+            {
+                parentItems = new Dictionary<object, object>();
+            }
+
+            var executionContext = new TagHelperExecutionContext(
+                tagName,
+                uniqueId,
+                executeChildContentAsync,
+                startWritingScope,
+                endWritingScope,
+                parentItems);
 
             _executionScopes.Push(executionContext);
 

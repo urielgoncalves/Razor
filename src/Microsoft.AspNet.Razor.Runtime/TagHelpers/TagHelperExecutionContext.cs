@@ -30,7 +30,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                    executeChildContentAsync: async () => await Task.FromResult(result: true),
                    startWritingScope: () => { },
                    endWritingScope: () => new StringWriter(),
-                   parentExecutionContext: null)
+                   parentItems: new Dictionary<object, object>())
         {
         }
 
@@ -42,31 +42,20 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <param name="executeChildContentAsync">A delegate used to execute the child content asynchronously.</param>
         /// <param name="startWritingScope">A delegate used to start a writing scope in a Razor page.</param>
         /// <param name="endWritingScope">A delegate used to end a writing scope in a Razor page.</param>
-        /// <param name="parentExecutionContext">The parent <see cref="TagHelperExecutionContext"/>.</param>
+        /// <param name="parentItems">Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s</param>
         public TagHelperExecutionContext([NotNull] string tagName,
                                          [NotNull] string uniqueId,
                                          [NotNull] Func<Task> executeChildContentAsync,
                                          [NotNull] Action startWritingScope,
                                          [NotNull] Func<TextWriter> endWritingScope,
-                                         TagHelperExecutionContext parentExecutionContext)
+                                         [NotNull] IDictionary<object, object> parentItems)
         {
             _tagHelpers = new List<ITagHelper>();
             _executeChildContentAsync = executeChildContentAsync;
             _startWritingScope = startWritingScope;
             _endWritingScope = endWritingScope;
 
-            // If we're not wrapped by another TagHelper then there will not be a parentExecutionContext.
-            if (parentExecutionContext != null)
-            {
-                Items = new CopyOnWriteDictionary<string, object>(
-                    parentExecutionContext.Items, 
-                    StringComparer.Ordinal);
-            }
-            else
-            {
-                Items = new Dictionary<string, object>(StringComparer.Ordinal);
-            }
-
+            Items = parentItems;
             AllAttributes = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             HTMLAttributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             TagName = tagName;
@@ -87,7 +76,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <summary>
         /// Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s.
         /// </summary>
-        public IDictionary<string, object> Items { get; }
+        public IDictionary<object, object> Items { get; }
 
         /// <summary>
         /// HTML attributes.

@@ -26,7 +26,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// asynchronously.</param>
         public TagHelperContext(
             [NotNull] IDictionary<string, object> allAttributes,
-            [NotNull] IDictionary<string, object> parentItems,
+            [NotNull] IDictionary<object, object> parentItems,
             [NotNull] string uniqueId,
             [NotNull] Func<Task<string>> getChildContentAsync)
         {
@@ -45,10 +45,10 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s.
         /// </summary>
         /// <remarks>
-        /// This <see cref="IDictionary{string, object}"/> is copy-on-write in order to not affect parent
+        /// This <see cref="IDictionary{object, object}"/> is copy-on-write in order to not affect parent
         /// <see cref="ITagHelper"/>s.
         /// </remarks>
-        public IDictionary<string, object> Items { get; }
+        public IDictionary<object, object> Items { get; }
 
         /// <summary>
         /// An identifier unique to the HTML element this context is for.

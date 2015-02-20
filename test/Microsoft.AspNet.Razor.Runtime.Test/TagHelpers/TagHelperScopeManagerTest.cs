@@ -17,6 +17,127 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             async () => await Task.FromResult(result: true);
 
         [Fact]
+        public void Begin_DoesNotRequireParentExecutionContext()
+        {
+            // Arrange & Act
+            var scopeManager = new TagHelperScopeManager();
+
+            // Act
+            var executionContext = scopeManager.Begin(
+                "p",
+                string.Empty,
+                DefaultExecuteChildContentAsync,
+                DefaultStartWritingScope,
+                DefaultEndWritingScope,
+                parentExecutionContext: null);
+            executionContext.Items["test-entry"] = 1234;
+
+            // Assert
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", (string)executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, executionContextItem.Value);
+        }
+
+        [Fact]
+        public void Begin_ReturnedExecutionContext_ItemsAreRetrievedFromParentExecutionContext()
+        {
+            // Arrange
+            var scopeManager = new TagHelperScopeManager();
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+
+            // Act
+            var executionContext = scopeManager.Begin(
+                "p",
+                string.Empty,
+                DefaultExecuteChildContentAsync,
+                DefaultStartWritingScope,
+                DefaultEndWritingScope,
+                parentExecutionContext: parentExecutionContext);
+
+            // Assert
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", (string)executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, executionContextItem.Value);
+        }
+
+        [Fact]
+        public void Begin_ReturnedExecutionContext_ItemsModificationDoesNotAffectParent()
+        {
+            // Arrange
+            var scopeManager = new TagHelperScopeManager();
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+            var executionContext = scopeManager.Begin(
+                "p",
+                string.Empty,
+                DefaultExecuteChildContentAsync,
+                DefaultStartWritingScope,
+                DefaultEndWritingScope,
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items["test-entry"] = 2222;
+
+            // Assert
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("test-entry", (string)executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(2222, executionContextItem.Value);
+            var parentExecutionContextItem = Assert.Single(parentExecutionContext.Items);
+            Assert.Equal("test-entry", (string)parentExecutionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, parentExecutionContextItem.Value);
+        }
+
+        [Fact]
+        public void Begin_ReturnedExecutionContext_ItemsInsertionDoesNotAffectParent()
+        {
+            // Arrange
+            var scopeManager = new TagHelperScopeManager();
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var executionContext = scopeManager.Begin(
+                "p",
+                string.Empty,
+                DefaultExecuteChildContentAsync,
+                DefaultStartWritingScope,
+                DefaultEndWritingScope,
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items["new-entry"] = 2222;
+
+            // Assert
+            var executionContextItem = Assert.Single(executionContext.Items);
+            Assert.Equal("new-entry", (string)executionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(2222, executionContextItem.Value);
+            Assert.Empty(parentExecutionContext.Items);
+        }
+
+        [Fact]
+        public void Begin_ReturnedExecutionContext_ItemsRemovalDoesNotAffectParent()
+        {
+            // Arrange
+            var scopeManager = new TagHelperScopeManager();
+            var parentExecutionContext = new TagHelperExecutionContext("p");
+            parentExecutionContext.Items["test-entry"] = 1234;
+            var executionContext = scopeManager.Begin(
+                "p",
+                string.Empty,
+                DefaultExecuteChildContentAsync,
+                DefaultStartWritingScope,
+                DefaultEndWritingScope,
+                parentExecutionContext: parentExecutionContext);
+
+            // Act
+            executionContext.Items.Remove("test-entry");
+
+            // Assert
+            Assert.Empty(executionContext.Items);
+            var parentExecutionContextItem = Assert.Single(parentExecutionContext.Items);
+            Assert.Equal("test-entry", (string)parentExecutionContextItem.Key, StringComparer.Ordinal);
+            Assert.Equal(1234, parentExecutionContextItem.Value);
+        }
+
+        [Fact]
         public void Begin_CreatesContextWithAppropriateTagName()
         {
             // Arrange

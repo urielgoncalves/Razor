@@ -14,7 +14,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         public void Items_IsConstructedItems()
         {
             // Arrange
-            var expectedItems = new Dictionary<string, object>
+            var expectedItems = new Dictionary<object, object>
             {
                 { "test-entry", 1234 }
             };
@@ -30,7 +30,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             Assert.NotNull(context.Items);
             Assert.Same(expectedItems, context.Items);
             var item = Assert.Single(context.Items);
-            Assert.Equal("test-entry", item.Key, StringComparer.Ordinal);
+            Assert.Equal("test-entry", (string)item.Key, StringComparer.Ordinal);
             Assert.Equal(1234, item.Value);
         }
     }
