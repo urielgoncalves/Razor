@@ -12,11 +12,6 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
 {
     public class TagHelperScopeManagerTest
     {
-        private static readonly Action DefaultStartWritingScope = () => { };
-        private static readonly Func<TextWriter> DefaultEndWritingScope = () => new StringWriter();
-        private static readonly Func<Task> DefaultExecuteChildContentAsync =
-            async () => await Task.FromResult(result: true);
-
         [Fact]
         public void Begin_DoesNotRequireParentExecutionContext()
         {
@@ -24,13 +19,7 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             var scopeManager = new TagHelperScopeManager();
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
             executionContext.Items["test-entry"] = 1234;
 
             // Assert
@@ -44,17 +33,11 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
         {
             // Arrange
             var scopeManager = new TagHelperScopeManager();
-            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var parentExecutionContext = BeginDefaultScope(scopeManager, tagName: "p");
             parentExecutionContext.Items["test-entry"] = 1234;
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Assert
             var executionContextItem = Assert.Single(executionContext.Items);
@@ -63,20 +46,14 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
         }
 
         [Fact]
-        public void Begin_ReturnedExecutionContext_ComplexObjectItemEntriesAreVisibleToParent()
+        public void Begin_DoesShallowCopyOfParentItems()
         {
             // Arrange
             var scopeManager = new TagHelperScopeManager();
             var parentComplexObject = new Dictionary<string, int>(StringComparer.Ordinal);
-            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var parentExecutionContext = BeginDefaultScope(scopeManager, tagName: "p");
             parentExecutionContext.Items["test-entry"] = parentComplexObject;
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Act
             ((Dictionary<string, int>)executionContext.Items["test-entry"]).Add("from-child", 1234);
@@ -95,15 +72,9 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
         {
             // Arrange
             var scopeManager = new TagHelperScopeManager();
-            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var parentExecutionContext = BeginDefaultScope(scopeManager, tagName: "p");
             parentExecutionContext.Items["test-entry"] = 1234;
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Act
             executionContext.Items["test-entry"] = 2222;
@@ -122,14 +93,8 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
         {
             // Arrange
             var scopeManager = new TagHelperScopeManager();
-            var parentExecutionContext = new TagHelperExecutionContext("p");
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var parentExecutionContext = BeginDefaultScope(scopeManager, tagName: "p");
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Act
             executionContext.Items["new-entry"] = 2222;
@@ -146,15 +111,9 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
         {
             // Arrange
             var scopeManager = new TagHelperScopeManager();
-            var parentExecutionContext = new TagHelperExecutionContext("p");
+            var parentExecutionContext = BeginDefaultScope(scopeManager, tagName: "p");
             parentExecutionContext.Items["test-entry"] = 1234;
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Act
             executionContext.Items.Remove("test-entry");
@@ -173,13 +132,7 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             var scopeManager = new TagHelperScopeManager();
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
 
             // Assert
             Assert.Equal("p", executionContext.TagName);
@@ -192,20 +145,8 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             var scopeManager = new TagHelperScopeManager();
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
-            executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "div",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
+            executionContext = BeginDefaultScope(scopeManager, tagName: "div");
 
             // Assert
             Assert.Equal("div", executionContext.TagName);
@@ -218,20 +159,8 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             var scopeManager = new TagHelperScopeManager();
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
-            executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "div",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
+            executionContext = BeginDefaultScope(scopeManager, tagName: "div");
             executionContext = scopeManager.End();
 
             // Assert
@@ -245,20 +174,8 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             var scopeManager = new TagHelperScopeManager();
 
             // Act
-            var executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "p",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
-            executionContext = scopeManager.Begin(
-                parentExecutionContext: null,
-                tagName: "div",
-                uniqueId: string.Empty,
-                executeChildContentAsync: DefaultExecuteChildContentAsync,
-                startWritingScope: DefaultStartWritingScope,
-                endWritingScope: DefaultEndWritingScope);
+            var executionContext = BeginDefaultScope(scopeManager, tagName: "p");
+            executionContext = BeginDefaultScope(scopeManager, tagName: "div");
             executionContext = scopeManager.End();
             executionContext = scopeManager.End();
 
@@ -284,6 +201,16 @@ namespace Microsoft.AspNet.Razor.Runtime.Test.TagHelpers
             });
 
             Assert.Equal(expectedError, ex.Message);
+        }
+
+        private static TagHelperExecutionContext BeginDefaultScope(TagHelperScopeManager scopeManager, string tagName)
+        {
+            return scopeManager.Begin(
+                tagName: tagName,
+                uniqueId: string.Empty,
+                executeChildContentAsync: async () => await Task.FromResult(result: true),
+                startWritingScope: () => { },
+                endWritingScope: () => new StringWriter());
         }
     }
 }

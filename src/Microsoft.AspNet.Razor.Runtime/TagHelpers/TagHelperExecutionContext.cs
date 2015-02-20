@@ -38,7 +38,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// Instantiates a new <see cref="TagHelperExecutionContext"/>.
         /// </summary>
         /// <param name="tagName">The HTML tag name in the Razor source.</param>
-        /// <param name="items">The collection of items used to communicate with child 
+        /// <param name="items">The collection of items used to communicate with other 
         /// <see cref="ITagHelper"/>s</param>
         /// <param name="uniqueId">An identifier unique to the HTML element this context is for.</param>
         /// <param name="executeChildContentAsync">A delegate used to execute the child content asynchronously.</param>
@@ -76,7 +76,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         }
 
         /// <summary>
-        /// Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s.
+        /// Gets the collection of items used to communicate with other <see cref="ITagHelper"/>s.
         /// </summary>
         public IDictionary<object, object> Items { get; }
 
