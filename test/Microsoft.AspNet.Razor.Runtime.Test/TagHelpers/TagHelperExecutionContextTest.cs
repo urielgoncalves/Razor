@@ -24,11 +24,11 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             // Act
             var executionContext = new TagHelperExecutionContext(
                 "p",
+                items: expectedItems,
                 uniqueId: string.Empty,
                 executeChildContentAsync: async () => await Task.FromResult(result: true),
                 startWritingScope: () => { },
-                endWritingScope: () => new StringWriter(),
-                parentItems: expectedItems);
+                endWritingScope: () => new StringWriter());
 
             // Assert
             Assert.NotNull(executionContext.Items);
@@ -43,6 +43,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var expectedContent = string.Empty;
             var executionContext = new TagHelperExecutionContext(
                 "p",
+                items: null,
                 uniqueId: string.Empty,
                 executeChildContentAsync: () =>
                 {
@@ -56,8 +57,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     return Task.FromResult(result: true);
                 },
                 startWritingScope: () => { },
-                endWritingScope: () => writer,
-                parentItems: null);
+                endWritingScope: () => writer);
 
             // Act
             var content1 = await executionContext.GetChildContentAsync();
@@ -76,6 +76,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             var childContentExecutionCount = 0;
             var executionContext = new TagHelperExecutionContext(
                 "p",
+                items: null,
                 uniqueId: string.Empty,
                 executeChildContentAsync: () =>
                 {
@@ -84,8 +85,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
                     return Task.FromResult(result: true);
                 },
                 startWritingScope: () => { },
-                endWritingScope: () => new StringWriter(),
-                parentItems: null);
+                endWritingScope: () => new StringWriter());
 
             // Act
             await executionContext.ExecuteChildContentAsync();

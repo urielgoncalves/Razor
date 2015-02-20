@@ -27,41 +27,42 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// <summary>
         /// Starts a <see cref="TagHelperExecutionContext"/> scope.
         /// </summary>
+        /// <param name="parentExecutionContext">The parent <see cref="TagHelperExecutionContext"/>.</param>
         /// <param name="tagName">The HTML tag name that the scope is associated with.</param>
         /// <param name="uniqueId">An identifier unique to the HTML element this scope is for.</param>
         /// <param name="executeChildContentAsync">A delegate used to execute the child content asynchronously.</param>
         /// <param name="startWritingScope">A delegate used to start a writing scope in a Razor page.</param>
         /// <param name="endWritingScope">A delegate used to end a writing scope in a Razor page.</param>
-        /// <param name="parentExecutionContext">The parent <see cref="TagHelperExecutionContext"/>.</param>
         /// <returns>A <see cref="TagHelperExecutionContext"/> to use.</returns>
-        public TagHelperExecutionContext Begin([NotNull] string tagName,
-                                               [NotNull] string uniqueId,
-                                               [NotNull] Func<Task> executeChildContentAsync,
-                                               [NotNull] Action startWritingScope,
-                                               [NotNull] Func<TextWriter> endWritingScope,
-                                               TagHelperExecutionContext parentExecutionContext)
+        public TagHelperExecutionContext Begin(
+            TagHelperExecutionContext parentExecutionContext,
+            [NotNull] string tagName,
+            [NotNull] string uniqueId,
+            [NotNull] Func<Task> executeChildContentAsync,
+            [NotNull] Action startWritingScope,
+            [NotNull] Func<TextWriter> endWritingScope)
         {
-            IDictionary<object, object> parentItems;
+            IDictionary<object, object> items;
 
-            // If we're not wrapped by another TagHelper then there will not be a parentExecutionContext.
+            // If we're not wrapped by another TagHelper, then there will not be a parentExecutionContext.
             if (parentExecutionContext != null)
             {
-                parentItems = new CopyOnWriteDictionary<object, object>(
+                items = new CopyOnWriteDictionary<object, object>(
                     parentExecutionContext.Items,
                     comparer: null);
             }
             else
             {
-                parentItems = new Dictionary<object, object>();
+                items = new Dictionary<object, object>();
             }
 
             var executionContext = new TagHelperExecutionContext(
                 tagName,
+                items,
                 uniqueId,
                 executeChildContentAsync,
                 startWritingScope,
-                endWritingScope,
-                parentItems);
+                endWritingScope);
 
             _executionScopes.Push(executionContext);
 

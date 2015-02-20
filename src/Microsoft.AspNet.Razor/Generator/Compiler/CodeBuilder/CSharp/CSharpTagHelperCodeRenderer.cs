@@ -107,7 +107,9 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
 
             // Assign a unique ID for this instance of the source HTML tag. This must be unique
             // per call site, e.g. if the tag is on the view twice, there should be two IDs.
-            _writer.WriteStringLiteral(tagName)
+            _writer.Write(ExecutionContextVariableName)
+                   .WriteParameterSeparator()
+                   .WriteStringLiteral(tagName)
                    .WriteParameterSeparator()
                    .WriteStringLiteral(GenerateUniqueId())
                    .WriteParameterSeparator();
@@ -134,8 +136,6 @@ namespace Microsoft.AspNet.Razor.Generator.Compiler.CSharp
                    .Write(_tagHelperContext.StartWritingScopeMethodName)
                    .WriteParameterSeparator()
                    .Write(_tagHelperContext.EndWritingScopeMethodName)
-                   .WriteParameterSeparator()
-                   .Write(ExecutionContextVariableName)
                    .WriteEndMethodInvocation();
         }
 

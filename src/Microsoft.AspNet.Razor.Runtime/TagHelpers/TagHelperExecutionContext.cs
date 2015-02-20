@@ -26,11 +26,11 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// </summary>
         internal TagHelperExecutionContext(string tagName)
             : this(tagName,
+                   items: new Dictionary<object, object>(),
                    uniqueId: string.Empty,
                    executeChildContentAsync: async () => await Task.FromResult(result: true),
                    startWritingScope: () => { },
-                   endWritingScope: () => new StringWriter(),
-                   parentItems: new Dictionary<object, object>())
+                   endWritingScope: () => new StringWriter())
         {
         }
 
@@ -38,27 +38,29 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
         /// Instantiates a new <see cref="TagHelperExecutionContext"/>.
         /// </summary>
         /// <param name="tagName">The HTML tag name in the Razor source.</param>
+        /// <param name="items">The collection of items used to communicate with child 
+        /// <see cref="ITagHelper"/>s</param>
         /// <param name="uniqueId">An identifier unique to the HTML element this context is for.</param>
         /// <param name="executeChildContentAsync">A delegate used to execute the child content asynchronously.</param>
         /// <param name="startWritingScope">A delegate used to start a writing scope in a Razor page.</param>
         /// <param name="endWritingScope">A delegate used to end a writing scope in a Razor page.</param>
-        /// <param name="parentItems">Gets the collection of items used to communicate with child <see cref="ITagHelper"/>s</param>
-        public TagHelperExecutionContext([NotNull] string tagName,
-                                         [NotNull] string uniqueId,
-                                         [NotNull] Func<Task> executeChildContentAsync,
-                                         [NotNull] Action startWritingScope,
-                                         [NotNull] Func<TextWriter> endWritingScope,
-                                         [NotNull] IDictionary<object, object> parentItems)
+        public TagHelperExecutionContext(
+            [NotNull] string tagName,
+            [NotNull] IDictionary<object, object> items,
+            [NotNull] string uniqueId,
+            [NotNull] Func<Task> executeChildContentAsync,
+            [NotNull] Action startWritingScope,
+            [NotNull] Func<TextWriter> endWritingScope)
         {
             _tagHelpers = new List<ITagHelper>();
             _executeChildContentAsync = executeChildContentAsync;
             _startWritingScope = startWritingScope;
             _endWritingScope = endWritingScope;
 
-            Items = parentItems;
             AllAttributes = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             HTMLAttributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             TagName = tagName;
+            Items = items;
             UniqueId = uniqueId;
         }
 

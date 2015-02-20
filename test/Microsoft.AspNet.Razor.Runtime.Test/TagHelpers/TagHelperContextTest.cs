@@ -11,7 +11,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
     public class TagHelperContextTest
     {
         [Fact]
-        public void Items_IsConstructedItems()
+        public void Constructor_SetsProperties_AsExpected()
         {
             // Arrange
             var expectedItems = new Dictionary<object, object>
@@ -22,7 +22,7 @@ namespace Microsoft.AspNet.Razor.Runtime.TagHelpers
             // Act
             var context = new TagHelperContext(
                 allAttributes: new Dictionary<string, object>(),
-                parentItems: expectedItems,
+                items: expectedItems,
                 uniqueId: string.Empty,
                 getChildContentAsync: () => Task.FromResult(string.Empty));
 
